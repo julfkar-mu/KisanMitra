@@ -1,0 +1,77 @@
+Build a professional, scalable ReactJS web application tailored for Hindi-speaking farmers, focused on crops disease identification, remedies, and crop management guidance. The system should have the following key features and considerations:
+
+Multilingual UI with Hindi as Default Language
+
+Implement full Hindi language support using a robust internationalization library such as react-i18next.
+
+Translate all UI text, crop categories, disease names, treatment instructions, seeding, watering info, and feedback prompts into clear, culturally appropriate Hindi.
+
+Provide option to toggle between Hindi and English for accessibility.
+
+Use Unicode fonts optimized for Devanagari script, ensuring crisp, readable Hindi text.
+
+Design UI/UX that accommodates Hindi text length and script, with adequate spacing and font sizing for readability.
+
+Home Page with Crop Categories
+
+Display crop categories (e.g., sugarcane, wheat, rice) as visually appealing, clickable cards with high-quality images.
+
+Card labels and image alt texts should be in Hindi.
+
+Crop Category Page
+
+Show detailed information about crop seeding, watering, and care instructions in Hindi.
+
+List related crop diseases with summaries.
+
+Each disease links to a dedicated disease detail page.
+
+Disease Detail Page
+
+Present detailed disease symptoms, causes, and stepwise treatment remedies in Hindi.
+
+Include an enhanced image gallery supporting multiple high-resolution disease images.
+
+The gallery should feature thumbnails, fullscreen view, and responsive swipe navigation for improved experience.
+
+Feedback Collection
+
+Embed a simple and accessible feedback form on crop category and disease pages for farmers to submit comments, ratings, and suggestions.
+
+Feedback form UI texts and validations must be in Hindi.
+
+Store feedback securely in the backend or cloud service.
+
+Mobile Number + OTP Authentication
+
+Integrate mobile number authentication with OTP verification using Firebase or a comparable service.
+
+All auth prompts, warnings, and errors must be available in Hindi.
+
+Ensure the login flow is intuitive and straightforward for non-technical users.
+
+Admin Panel for Content Management
+
+Develop an admin interface allowing content managers to add, update, or delete crop categories, diseases, images, and instructions.
+
+Support bilingual content management with toggling between Hindi and English input.
+
+Provide WYSIWYG editors capable of handling Devanagari script for rich text formatting.
+
+Technical and UX Best Practices
+
+Use modern React best practices with functional components, hooks, and context API or Redux for state management.
+
+Employ react-router-dom for SPA navigation and clean URL management.
+
+Lazy load images and optimize performance to accommodate low bandwidth environments typical in rural areas.
+
+Conduct accessibility audits considering the target user base.
+
+Implement responsive design ensuring smooth experience across all devices, especially mobiles.
+
+Use form validation libraries (Formik/Yup) with localized error messages.
+
+Include loading indicators and graceful error handling in Hindi.
+
+Deliver the system with a modular, maintainable codebase that supports easy future extension to additional languages or crop data expansion. Prioritize user empathy, simplicity, and cultural relevance to drive adoption and trust among Hindi-speaking farmers.
