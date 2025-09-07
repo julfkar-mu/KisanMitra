@@ -1,0 +1,1033 @@
+<html lang="hi" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>कृषि सहायक - Crop Disease Identification System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    popover: {
+                        DEFAULT: "var(--popover)",
+                        foreground: "var(--popover-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                }
+            },
+            fontFamily: {
+                sans: ["var(--font-sans)"],
+                hindi: ["var(--font-hindi)"],
+            }
+        },
+    };
+    </script>
+    <style>
+        :root {
+            --background: hsl(39 40% 97%);
+            --foreground: hsl(39 10% 9%);
+            --card: hsl(39 50% 99%);
+            --card-foreground: hsl(39 10% 15%);
+            --popover: hsl(39 50% 99%);
+            --popover-foreground: hsl(39 95% 9%);
+            --primary: hsl(142 76% 36%);
+            --primary-foreground: hsl(355 100% 97%);
+            --secondary: hsl(39 30% 50%);
+            --secondary-foreground: hsl(39 0% 98%);
+            --muted: hsl(142 30% 94%);
+            --muted-foreground: hsl(39 5% 35%);
+            --accent: hsl(24 96% 53%);
+            --accent-foreground: hsl(355 100% 97%);
+            --destructive: hsl(0 84% 60%);
+            --destructive-foreground: hsl(355 100% 97%);
+            --border: hsl(39 20% 82%);
+            --input: hsl(39 20% 82%);
+            --ring: hsl(142 76% 36%);
+            --radius: 8px;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, "Helvetica Neue", sans-serif;
+            --font-hindi: "Noto Sans Devanagari", "Mangal", "Lohit Devanagari", sans-serif;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: var(--font-hindi), var(--font-sans);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        .hindi-text {
+            font-family: var(--font-hindi);
+            letter-spacing: 0.01em;
+        }
+
+        /* Custom scrollbar for image gallery */
+        .gallery-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+        .gallery-scroll::-webkit-scrollbar-track {
+            background: var(--muted);
+        }
+        .gallery-scroll::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        /* Touch-friendly mobile interactions */
+        .touch-target {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Loading animation */
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Progressive enhancement for low bandwidth */
+        .lazy-load {
+            background: var(--muted);
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-background text-foreground antialiased">
+    <!-- @COMPONENT: Header [Navigation with language toggle and auth] -->
+    <header class="sticky top-0 z-50 bg-card border-b border-border shadow-sm">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-seedling text-primary-foreground text-lg"></i>
+                    </div>
+                    <div class="hindi-text">
+                        <h1 class="text-xl font-semibold text-foreground">कृषि सहायक</h1>
+                        <p class="text-xs text-muted-foreground">Crop Disease Expert</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Language Toggle -->
+                    <div class="flex bg-muted rounded-lg p-1">
+                        <button class="px-3 py-1 text-sm font-medium bg-primary text-primary-foreground rounded-md touch-target" data-lang="hi">हि</button>
+                        <button class="px-3 py-1 text-sm font-medium text-muted-foreground hover:text-foreground rounded-md touch-target" data-lang="en">EN</button>
+                    </div>
+                    
+                    <!-- User Profile/Login -->
+                    <button class="flex items-center space-x-2 bg-secondary text-secondary-foreground px-4 py-2 rounded-lg touch-target hover:bg-secondary/90 transition-colors">
+                        <i class="fas fa-user"></i>
+                        <span class="text-sm font-medium hindi-text">प्रवेश करें</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: Header -->
+
+    <!-- @COMPONENT: AuthModal [Mobile OTP authentication] -->
+    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-card rounded-xl p-6 w-full max-w-md">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-mobile-alt text-primary-foreground text-2xl"></i>
+                </div>
+                <h2 class="text-xl font-semibold hindi-text mb-2">मोबाइल नंबर से लॉगिन करें</h2>
+                <p class="text-muted-foreground text-sm hindi-text">हम आपके मोबाइल नंबर पर OTP भेजेंगे</p>
+            </div>
+
+            <form class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-foreground mb-2 hindi-text">मोबाइल नंबर</label>
+                    <div class="flex">
+                        <span class="bg-muted px-3 py-2 border border-border rounded-l-lg text-sm">+91</span>
+                        <input type="tel" placeholder="1234567890" class="flex-1 px-3 py-2 border border-border rounded-r-lg focus:outline-none focus:ring-2 focus:ring-ring text-center tracking-wider" maxlength="10" />
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium touch-target hover:bg-primary/90 transition-colors hindi-text">
+                    OTP भेजें
+                </button>
+                
+                <div class="text-center">
+                    <button type="button" class="text-muted-foreground text-sm hover:text-foreground hindi-text" onclick="closeAuthModal()">
+                        रद्द करें
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AuthModal -->
+
+    <!-- @COMPONENT: HomePage [Main crop categories display] -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Hero Section -->
+        <section class="text-center mb-12">
+            <!-- A diverse group of Indian farmers working together in a lush green field with various crops -->
+            <div class="relative h-64 rounded-2xl overflow-hidden mb-6" style="background-image: url('https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=400'); background-size: cover; background-position: center;">
+                <div class="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent"></div>
+                <div class="absolute inset-0 flex items-center justify-start pl-8">
+                    <div class="text-left text-white max-w-md">
+                        <h2 class="text-3xl md:text-4xl font-bold mb-4 hindi-text">फसल रोग पहचान और उपचार</h2>
+                        <p class="text-lg mb-6 hindi-text">अपनी फसल को स्वस्थ रखने के लिए विशेषज्ञ सलाह पाएं</p>
+                        <button class="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors touch-target hindi-text">
+                            शुरू करें
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Stats -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-card p-6 rounded-xl border border-border text-center">
+                <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-leaf text-primary text-xl"></i>
+                </div>
+                <h3 class="font-semibold text-lg mb-1 hindi-text">50+ फसलें</h3>
+                <p class="text-muted-foreground text-sm hindi-text">विभिन्न प्रकार की फसलों की जानकारी</p>
+            </div>
+            
+            <div class="bg-card p-6 rounded-xl border border-border text-center">
+                <div class="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-bug text-accent text-xl"></i>
+                </div>
+                <h3 class="font-semibold text-lg mb-1 hindi-text">200+ रोग</h3>
+                <p class="text-muted-foreground text-sm hindi-text">आम फसल रोगों की पहचान</p>
+            </div>
+            
+            <div class="bg-card p-6 rounded-xl border border-border text-center">
+                <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-users text-secondary text-xl"></i>
+                </div>
+                <h3 class="font-semibold text-lg mb-1 hindi-text">10,000+ किसान</h3>
+                <p class="text-muted-foreground text-sm hindi-text">हमारे साथ जुड़े हुए किसान</p>
+            </div>
+        </section>
+
+        <!-- Crop Categories -->
+        <section>
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-2xl font-bold hindi-text">फसल श्रेणियां</h2>
+                <button class="text-primary hover:text-primary/80 font-medium text-sm hindi-text">
+                    सभी देखें <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+
+            <!-- @MAP: cropCategories.map(category => ( -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Wheat Card -->
+                <div class="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer" data-crop="wheat">
+                    <!-- Golden wheat field swaying in the wind during harvest season -->
+                    <div class="h-48 bg-gradient-to-br from-yellow-400 to-yellow-600 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
+                             alt="गेहूं की फसल" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div class="absolute top-4 right-4 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium hindi-text">
+                            रबी
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2 hindi-text">गेहूं</h3>
+                        <p class="text-muted-foreground text-sm mb-4 hindi-text">रबी की मुख्य फसल, उत्तर भारत में व्यापक खेती</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-muted-foreground hindi-text">15 आम रोग</span>
+                            <i class="fas fa-arrow-right text-primary group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rice Card -->
+                <div class="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer" data-crop="rice">
+                    <!-- Lush green rice paddies with farmers working in flooded fields -->
+                    <div class="h-48 bg-gradient-to-br from-green-400 to-green-600 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1536431311719-398b6704d4cc?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
+                             alt="धान की फसल" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div class="absolute top-4 right-4 bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs font-medium hindi-text">
+                            खरीफ
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2 hindi-text">धान</h3>
+                        <p class="text-muted-foreground text-sm mb-4 hindi-text">खरीफ की मुख्य फसल, भारत की मुख्य खाद्य फसल</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-muted-foreground hindi-text">18 आम रोग</span>
+                            <i class="fas fa-arrow-right text-primary group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sugarcane Card -->
+                <div class="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer" data-crop="sugarcane">
+                    <!-- Tall sugarcane plants in organized rows with clear blue sky -->
+                    <div class="h-48 bg-gradient-to-br from-green-500 to-green-700 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1560493676-04071c5f467b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
+                             alt="गन्ने की फसल" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div class="absolute top-4 right-4 bg-accent text-accent-foreground px-2 py-1 rounded text-xs font-medium hindi-text">
+                            नकदी फसल
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2 hindi-text">गन्ना</h3>
+                        <p class="text-muted-foreground text-sm mb-4 hindi-text">मुख्य नकदी फसल, उत्तर प्रदेश में व्यापक खेती</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-muted-foreground hindi-text">12 आम रोग</span>
+                            <i class="fas fa-arrow-right text-primary group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cotton Card -->
+                <div class="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer" data-crop="cotton">
+                    <!-- White cotton bolls ready for harvest in organized agricultural field -->
+                    <div class="h-48 bg-gradient-to-br from-white to-gray-200 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
+                             alt="कपास की फसल" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div class="absolute top-4 right-4 bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs font-medium hindi-text">
+                            खरीफ
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2 hindi-text">कपास</h3>
+                        <p class="text-muted-foreground text-sm mb-4 hindi-text">फाइबर फसल, गुजरात और महाराष्ट्र में मुख्य</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-muted-foreground hindi-text">20 आम रोग</span>
+                            <i class="fas fa-arrow-right text-primary group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maize Card -->
+                <div class="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer" data-crop="maize">
+                    <!-- Golden corn field with mature corn stalks and healthy green leaves -->
+                    <div class="h-48 bg-gradient-to-br from-yellow-500 to-orange-400 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
+                             alt="मक्का की फसल" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div class="absolute top-4 right-4 bg-primary text-primary-foreground px-2 py-1 rounded text-xs font-medium hindi-text">
+                            खरीफ
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2 hindi-text">मक्का</h3>
+                        <p class="text-muted-foreground text-sm mb-4 hindi-text">बहुउद्देश्यीय फसल, खाद्य और चारा दोनों के लिए</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-muted-foreground hindi-text">14 आम रोग</span>
+                            <i class="fas fa-arrow-right text-primary group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Soybean Card -->
+                <div class="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer" data-crop="soybean">
+                    <!-- Healthy soybean plants with pods in agricultural field during growing season -->
+                    <div class="h-48 bg-gradient-to-br from-green-600 to-green-800 relative overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1500651230702-0e2d8a49d4ad?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
+                             alt="सोयाबीन की फसल" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div class="absolute top-4 right-4 bg-accent text-accent-foreground px-2 py-1 rounded text-xs font-medium hindi-text">
+                            खरीफ
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold mb-2 hindi-text">सोयाबीन</h3>
+                        <p class="text-muted-foreground text-sm mb-4 hindi-text">तिलहनी फसल, मध्य प्रदेश में व्यापक खेती</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-muted-foreground hindi-text">16 आम रोग</span>
+                            <i class="fas fa-arrow-right text-primary group-hover:translate-x-1 transition-transform"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_MAP )) -->
+
+            <!-- Quick Disease Identifier -->
+            <div class="bg-gradient-to-r from-accent to-primary p-8 rounded-2xl text-white">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="mb-6 md:mb-0">
+                        <h3 class="text-2xl font-bold mb-2 hindi-text">तुरंत रोग पहचान</h3>
+                        <p class="text-white/90 hindi-text">फसल की तस्वीर अपलोड करें और तुरंत रोग की पहचान करें</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button class="bg-white text-accent px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transition-colors touch-target hindi-text">
+                            <i class="fas fa-camera mr-2"></i>
+                            फोटो लें
+                        </button>
+                        <button class="bg-white/20 text-white border border-white/30 px-6 py-3 rounded-lg font-semibold hover:bg-white/30 transition-colors touch-target hindi-text">
+                            <i class="fas fa-upload mr-2"></i>
+                            अपलोड करें
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- @END_COMPONENT: HomePage -->
+
+    <!-- @COMPONENT: CropDetailPage [Detailed crop information hidden by default] -->
+    <div id="cropDetail" class="hidden">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Breadcrumb Navigation -->
+            <nav class="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
+                <button class="hover:text-foreground hindi-text" onclick="showHome()">मुख्य पृष्ठ</button>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <button class="hover:text-foreground hindi-text" onclick="showHome()">फसल श्रेणियां</button>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <span class="text-foreground hindi-text" data-bind="crop.name">गेहूं</span>
+            </nav>
+
+            <!-- Crop Header -->
+            <div class="bg-card rounded-2xl border border-border overflow-hidden mb-8">
+                <!-- Close-up view of healthy wheat grains and stalks in agricultural field -->
+                <div class="h-64 relative">
+                    <img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=400" 
+                         alt="गेहूं की विस्तृत जानकारी" 
+                         class="w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div class="absolute bottom-6 left-6">
+                        <h1 class="text-3xl font-bold text-white mb-2 hindi-text" data-bind="crop.name">गेहूं (Wheat)</h1>
+                        <p class="text-white/90 hindi-text" data-bind="crop.scientificName">Triticum aestivum</p>
+                    </div>
+                </div>
+
+                <div class="p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-calendar text-primary text-xl"></i>
+                            </div>
+                            <h3 class="font-semibold mb-1 hindi-text">बुआई का समय</h3>
+                            <p class="text-muted-foreground text-sm hindi-text" data-bind="crop.sowingTime">नवंबर-दिसंबर</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-thermometer-half text-secondary text-xl"></i>
+                            </div>
+                            <h3 class="font-semibold mb-1 hindi-text">तापमान</h3>
+                            <p class="text-muted-foreground text-sm hindi-text" data-bind="crop.temperature">15-25°C</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-tint text-accent text-xl"></i>
+                            </div>
+                            <h3 class="font-semibold mb-1 hindi-text">पानी की आवश्यकता</h3>
+                            <p class="text-muted-foreground text-sm hindi-text" data-bind="crop.waterRequirement">400-500 मिमी</p>
+                        </div>
+                    </div>
+
+                    <!-- Tabs for Different Information -->
+                    <div class="border-b border-border mb-6">
+                        <nav class="flex space-x-8">
+                            <button class="py-2 px-1 border-b-2 border-primary text-primary font-medium text-sm hindi-text" data-tab="care">देखभाल</button>
+                            <button class="py-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium text-sm hindi-text" data-tab="diseases">रोग</button>
+                            <button class="py-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium text-sm hindi-text" data-tab="nutrition">पोषण</button>
+                        </nav>
+                    </div>
+
+                    <!-- Care Instructions Tab -->
+                    <div id="careTab" class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4 hindi-text">खेत की तैयारी</h3>
+                            <ul class="space-y-2">
+                                <li class="flex items-start space-x-3">
+                                    <i class="fas fa-check-circle text-primary text-sm mt-1"></i>
+                                    <span class="text-muted-foreground hindi-text" data-mock="true">खेत में 2-3 बार हल चलाएं</span>
+                                </li>
+                                <li class="flex items-start space-x-3">
+                                    <i class="fas fa-check-circle text-primary text-sm mt-1"></i>
+                                    <span class="text-muted-foreground hindi-text" data-mock="true">मिट्टी में जैविक खाद मिलाएं</span>
+                                </li>
+                                <li class="flex items-start space-x-3">
+                                    <i class="fas fa-check-circle text-primary text-sm mt-1"></i>
+                                    <span class="text-muted-foreground hindi-text" data-mock="true">खेत को समतल करें</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4 hindi-text">सिंचाई की व्यवस्था</h3>
+                            <div class="bg-muted p-4 rounded-lg">
+                                <p class="text-muted-foreground hindi-text" data-mock="true">गेहूं की फसल को 4-5 सिंचाई की आवश्यकता होती है। पहली सिंचाई बुआई के 20-25 दिन बाद करें।</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Disease List Tab (Hidden) -->
+                    <div id="diseaseTab" class="hidden space-y-4">
+                        <!-- @MAP: cropDiseases.map(disease => ( -->
+                        <div class="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer">
+                            <div class="flex items-center space-x-4">
+                                <!-- Wheat plant affected by rust disease showing orange-brown spots on leaves -->
+                                <img src="https://images.unsplash.com/photo-1628126235206-5260b9ea6441?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=100&h=100" 
+                                     alt="गेहूं का रतुआ रोग" 
+                                     class="w-16 h-16 rounded-lg object-cover" />
+                                <div class="flex-1">
+                                    <h4 class="font-semibold hindi-text" data-bind="disease.name">गेहूं का रतुआ</h4>
+                                    <p class="text-muted-foreground text-sm hindi-text" data-bind="disease.description">पत्तियों पर भूरे-नारंगी धब्बे दिखाई देते हैं</p>
+                                    <span class="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded hindi-text">गंभीर</span>
+                                </div>
+                                <i class="fas fa-chevron-right text-muted-foreground"></i>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Diseases Section -->
+            <section>
+                <h2 class="text-2xl font-bold mb-6 hindi-text">संबंधित रोग</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- @MAP: relatedDiseases.map(disease => ( -->
+                    <div class="bg-card border border-border rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer">
+                        <!-- Close-up of plant disease symptoms on crop leaves -->
+                        <img src="https://images.unsplash.com/photo-1628126235206-5260b9ea6441?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&h=200" 
+                             alt="फसल रोग" 
+                             class="w-full h-32 object-cover rounded-lg mb-3" />
+                        <h3 class="font-semibold mb-2 hindi-text" data-bind="disease.name" data-mock="true">पत्ती झुलसा रोग</h3>
+                        <p class="text-muted-foreground text-sm hindi-text" data-bind="disease.symptoms" data-mock="true">पत्तियों पर काले धब्बे और सूखना</p>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </section>
+        </div>
+
+        <!-- @COMPONENT: FeedbackSection [Feedback form for crop pages] -->
+        <section class="bg-muted py-12 mt-12">
+            <div class="container mx-auto px-4">
+                <div class="max-w-2xl mx-auto">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold mb-2 hindi-text">आपकी राय हमारे लिए महत्वपूर्ण है</h2>
+                        <p class="text-muted-foreground hindi-text">इस जानकारी के बारे में अपना अनुभव साझा करें</p>
+                    </div>
+
+                    <div class="bg-card rounded-xl p-6 border border-border">
+                        <form class="space-y-4" data-implementation="Should validate form before submission">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-foreground mb-2 hindi-text">नाम</label>
+                                    <input type="text" placeholder="अपना नाम लिखें" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring hindi-text" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-foreground mb-2 hindi-text">मोबाइल नंबर</label>
+                                    <input type="tel" placeholder="1234567890" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2 hindi-text">रेटिंग</label>
+                                <div class="flex space-x-2">
+                                    <button type="button" class="text-2xl text-yellow-400 hover:text-yellow-500 touch-target" data-rating="1">★</button>
+                                    <button type="button" class="text-2xl text-yellow-400 hover:text-yellow-500 touch-target" data-rating="2">★</button>
+                                    <button type="button" class="text-2xl text-yellow-400 hover:text-yellow-500 touch-target" data-rating="3">★</button>
+                                    <button type="button" class="text-2xl text-yellow-400 hover:text-yellow-500 touch-target" data-rating="4">★</button>
+                                    <button type="button" class="text-2xl text-muted-foreground hover:text-yellow-500 touch-target" data-rating="5">★</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2 hindi-text">टिप्पणी</label>
+                                <textarea rows="4" placeholder="अपनी राय या सुझाव लिखें..." class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring resize-none hindi-text"></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors touch-target hindi-text">
+                                फीडबैक भेजें
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- @END_COMPONENT: FeedbackSection -->
+    </div>
+    <!-- @END_COMPONENT: CropDetailPage -->
+
+    <!-- @COMPONENT: DiseaseDetailPage [Disease information with image gallery] -->
+    <div id="diseaseDetail" class="hidden">
+        <div class="container mx-auto px-4 py-8">
+            <!-- Breadcrumb -->
+            <nav class="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
+                <button class="hover:text-foreground hindi-text" onclick="showHome()">मुख्य पृष्ठ</button>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <button class="hover:text-foreground hindi-text">गेहूं</button>
+                <i class="fas fa-chevron-right text-xs"></i>
+                <span class="text-foreground hindi-text" data-bind="disease.name">गेहूं का रतुआ</span>
+            </nav>
+
+            <!-- Disease Header -->
+            <div class="bg-card rounded-2xl border border-border p-8 mb-8">
+                <div class="flex items-start space-x-6">
+                    <div class="w-20 h-20 bg-destructive/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-destructive text-2xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h1 class="text-3xl font-bold mb-2 hindi-text" data-bind="disease.name">गेहूं का रतुआ रोग</h1>
+                        <p class="text-muted-foreground mb-4 hindi-text" data-bind="disease.scientificName">Puccinia graminis</p>
+                        <div class="flex items-center space-x-4">
+                            <span class="bg-destructive/10 text-destructive px-3 py-1 rounded-full text-sm font-medium hindi-text">गंभीर रोग</span>
+                            <span class="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-sm font-medium hindi-text">कवक जनित</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Gallery -->
+            <section class="mb-8">
+                <h2 class="text-xl font-bold mb-4 hindi-text">रोग की पहचान</h2>
+                <div class="bg-card border border-border rounded-xl p-6">
+                    <!-- Main Image -->
+                    <div class="mb-4">
+                        <!-- Detailed view of wheat rust disease showing orange pustules on wheat leaves -->
+                        <img id="mainDiseaseImage" 
+                             src="https://images.unsplash.com/photo-1628126235206-5260b9ea6441?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" 
+                             alt="गेहूं रतुआ रोग का मुख्य चित्र" 
+                             class="w-full h-64 md:h-80 object-cover rounded-lg cursor-pointer" 
+                             onclick="openImageModal(this.src)" />
+                    </div>
+                    
+                    <!-- Thumbnail Gallery -->
+                    <div class="flex space-x-3 overflow-x-auto gallery-scroll pb-2">
+                        <!-- Various stages of wheat rust disease progression on different plant parts -->
+                        <img src="https://images.unsplash.com/photo-1628126235206-5260b9ea6441?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&h=100" 
+                             alt="रतुआ रोग चरण 1" 
+                             class="w-20 h-16 object-cover rounded cursor-pointer border-2 border-primary" 
+                             onclick="changeMainImage(this.src)" />
+                        <!-- Close-up microscopic view of rust spores on wheat leaf surface -->
+                        <img src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&h=100" 
+                             alt="रतुआ रोग चरण 2" 
+                             class="w-20 h-16 object-cover rounded cursor-pointer border-2 border-border hover:border-primary transition-colors" 
+                             onclick="changeMainImage(this.src)" />
+                        <!-- Wheat field showing widespread rust infection with yellowing plants -->
+                        <img src="https://images.unsplash.com/photo-1595576508898-0ad5c879a061?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&h=100" 
+                             alt="रतुआ रोग चरण 3" 
+                             class="w-20 h-16 object-cover rounded cursor-pointer border-2 border-border hover:border-primary transition-colors" 
+                             onclick="changeMainImage(this.src)" />
+                        <!-- Infected wheat grain showing rust damage and discoloration -->
+                        <img src="https://images.unsplash.com/photo-1571771019784-3ff35f4f4277?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=150&h=100" 
+                             alt="रतुआ रोग चरण 4" 
+                             class="w-20 h-16 object-cover rounded cursor-pointer border-2 border-border hover:border-primary transition-colors" 
+                             onclick="changeMainImage(this.src)" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- Disease Information Tabs -->
+            <section class="bg-card border border-border rounded-xl">
+                <div class="border-b border-border p-6">
+                    <nav class="flex space-x-8">
+                        <button class="py-2 px-1 border-b-2 border-primary text-primary font-medium hindi-text" data-tab="symptoms">लक्षण</button>
+                        <button class="py-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium hindi-text" data-tab="causes">कारण</button>
+                        <button class="py-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium hindi-text" data-tab="treatment">उपचार</button>
+                        <button class="py-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium hindi-text" data-tab="prevention">रोकथाम</button>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <!-- Symptoms Tab -->
+                    <div id="symptomsTab">
+                        <h3 class="text-lg font-semibold mb-4 hindi-text">मुख्य लक्षण</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-destructive rounded-full mt-2 flex-shrink-0"></div>
+                                <p class="text-muted-foreground hindi-text" data-mock="true">पत्तियों पर भूरे-नारंगी रंग के छोटे धब्बे दिखाई देते हैं</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-destructive rounded-full mt-2 flex-shrink-0"></div>
+                                <p class="text-muted-foreground hindi-text" data-mock="true">धब्बे धीरे-धीरे बड़े होकर पूरी पत्ती को ढक लेते हैं</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-destructive rounded-full mt-2 flex-shrink-0"></div>
+                                <p class="text-muted-foreground hindi-text" data-mock="true">पत्तियां पीली पड़कर सूखने लगती हैं</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 bg-destructive rounded-full mt-2 flex-shrink-0"></div>
+                                <p class="text-muted-foreground hindi-text" data-mock="true">दानों की गुणवत्ता में गिरावट</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-muted p-4 rounded-lg mt-6">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <i class="fas fa-lightbulb text-accent"></i>
+                                <span class="font-medium hindi-text">जरूरी सुझाव</span>
+                            </div>
+                            <p class="text-muted-foreground text-sm hindi-text" data-mock="true">यदि आपको ये लक्षण दिखाई दें तो तुरंत विशेषज्ञ से सलाह लें। जल्दी पहचान से बेहतर उपचार संभव है।</p>
+                        </div>
+                    </div>
+
+                    <!-- Treatment Tab (Hidden) -->
+                    <div id="treatmentTab" class="hidden">
+                        <h3 class="text-lg font-semibold mb-4 hindi-text">उपचार की विधि</h3>
+                        <div class="space-y-6">
+                            <div class="border-l-4 border-primary pl-4">
+                                <h4 class="font-medium mb-2 hindi-text">चरण 1: तुरंत उपचार</h4>
+                                <p class="text-muted-foreground text-sm hindi-text" data-mock="true">प्रोपिकोनाज़ोल 25% EC @ 1 मिली प्रति लीटर पानी में घोलकर छिड़काव करें</p>
+                            </div>
+                            <div class="border-l-4 border-secondary pl-4">
+                                <h4 class="font-medium mb-2 hindi-text">चरण 2: फॉलो-अप</h4>
+                                <p class="text-muted-foreground text-sm hindi-text" data-mock="true">10-15 दिन बाद दोबारा छिड़काव करें यदि आवश्यक हो</p>
+                            </div>
+                            <div class="border-l-4 border-accent pl-4">
+                                <h4 class="font-medium mb-2 hindi-text">चरण 3: निगरानी</h4>
+                                <p class="text-muted-foreground text-sm hindi-text" data-mock="true">नियमित रूप से फसल की जांच करते रहें</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: DiseaseDetailPage -->
+
+    <!-- @COMPONENT: ImageModal [Fullscreen image viewer] -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4 hidden">
+        <div class="relative max-w-4xl max-h-full">
+            <button class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 z-10 touch-target" onclick="closeImageModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            <img id="modalImage" src="" alt="" class="max-w-full max-h-full object-contain rounded-lg" />
+            <div class="absolute bottom-4 left-4 right-4 text-center">
+                <p id="modalImageDescription" class="text-white text-sm hindi-text"></p>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: ImageModal -->
+
+    <!-- @COMPONENT: AdminPanel [Content management interface preview] -->
+    <div id="adminPanel" class="hidden">
+        <div class="container mx-auto px-4 py-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold hindi-text">एडमिन पैनल</h1>
+                <p class="text-muted-foreground hindi-text">फसल और रोग की जानकारी प्रबंधित करें</p>
+            </div>
+
+            <!-- Admin Navigation -->
+            <div class="bg-card border border-border rounded-xl mb-8">
+                <div class="p-6 border-b border-border">
+                    <nav class="flex space-x-8">
+                        <button class="py-2 px-1 border-b-2 border-primary text-primary font-medium hindi-text">फसल प्रबंधन</button>
+                        <button class="py-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium hindi-text">रोग प्रबंधन</button>
+                        <button class="py-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium hindi-text">उपयोगकर्ता</button>
+                        <button class="py-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground font-medium hindi-text">फीडबैक</button>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <!-- Add New Crop Form -->
+                    <div class="max-w-2xl">
+                        <h3 class="text-lg font-semibold mb-6 hindi-text">नई फसल जोड़ें</h3>
+                        <form class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-foreground mb-2 hindi-text">फसल का नाम (हिंदी)</label>
+                                    <input type="text" placeholder="उदाहरण: गेहूं" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring hindi-text" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-foreground mb-2">Crop Name (English)</label>
+                                    <input type="text" placeholder="Example: Wheat" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2 hindi-text">वैज्ञानिक नाम</label>
+                                <input type="text" placeholder="उदाहरण: Triticum aestivum" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" />
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-foreground mb-2 hindi-text">बुआई का समय</label>
+                                    <input type="text" placeholder="नवंबर-दिसंबर" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring hindi-text" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-foreground mb-2 hindi-text">तापमान आवश्यकता</label>
+                                    <input type="text" placeholder="15-25°C" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-foreground mb-2 hindi-text">पानी की आवश्यकता</label>
+                                    <input type="text" placeholder="400-500 मिमी" class="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring hindi-text" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-2 hindi-text">फसल का विवरण</label>
+                                <!-- @FUNCTIONALITY: This should implement a WYSIWYG editor supporting Devanagari script -->
+                                <div class="border border-border rounded-lg">
+                                    <div class="border-b border-border p-3 bg-muted flex space-x-2">
+                                        <button type="button" class="px-2 py-1 text-sm hover:bg-background rounded touch-target"><i class="fas fa-bold"></i></button>
+                                        <button type="button" class="px-2 py-1 text-sm hover:bg-background rounded touch-target"><i class="fas fa-italic"></i></button>
+                                        <button type="button" class="px-2 py-1 text-sm hover:bg-background rounded touch-target"><i class="fas fa-list-ul"></i></button>
+                                        <button type="button" class="px-2 py-1 text-sm hover:bg-background rounded touch-target hindi-text">हि</button>
+                                    </div>
+                                    <textarea rows="6" placeholder="फसल के बारे में विस्तृत जानकारी लिखें..." class="w-full px-3 py-2 border-0 focus:outline-none focus:ring-0 resize-none hindi-text"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="flex space-x-4">
+                                <button type="submit" class="bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors touch-target hindi-text">
+                                    सहेजें
+                                </button>
+                                <button type="button" class="bg-muted text-muted-foreground px-6 py-2 rounded-lg font-medium hover:bg-muted/80 transition-colors touch-target hindi-text">
+                                    रद्द करें
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AdminPanel -->
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-card border-t border-border md:hidden">
+        <div class="grid grid-cols-4 gap-1 p-2">
+            <button class="flex flex-col items-center py-2 text-primary touch-target" onclick="showHome()">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span class="text-xs hindi-text">मुख्य</span>
+            </button>
+            <button class="flex flex-col items-center py-2 text-muted-foreground hover:text-foreground touch-target">
+                <i class="fas fa-camera text-lg mb-1"></i>
+                <span class="text-xs hindi-text">स्कैन</span>
+            </button>
+            <button class="flex flex-col items-center py-2 text-muted-foreground hover:text-foreground touch-target">
+                <i class="fas fa-bookmark text-lg mb-1"></i>
+                <span class="text-xs hindi-text">सहेजे गए</span>
+            </button>
+            <button class="flex flex-col items-center py-2 text-muted-foreground hover:text-foreground touch-target">
+                <i class="fas fa-user text-lg mb-1"></i>
+                <span class="text-xs hindi-text">प्रोफाइल</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 flex items-center justify-center hidden">
+        <div class="bg-card p-6 rounded-xl shadow-lg text-center">
+            <div class="w-12 h-12 border-4 border-muted border-t-primary rounded-full loading-spinner mx-auto mb-4"></div>
+            <p class="text-foreground font-medium hindi-text">लोड हो रहा है...</p>
+            <p class="text-muted-foreground text-sm hindi-text">कृपया प्रतीक्षा करें</p>
+        </div>
+    </div>
+
+    <script>
+        // TODO: Implement React components, state management, and API integration
+        // This JavaScript is for demonstration purposes only
+
+        (function() {
+            // Navigation functions
+            window.showHome = function() {
+                document.getElementById('cropDetail').classList.add('hidden');
+                document.getElementById('diseaseDetail').classList.add('hidden');
+                document.getElementById('adminPanel').classList.add('hidden');
+                document.querySelector('main').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            window.showCropDetail = function(cropType) {
+                document.querySelector('main').classList.add('hidden');
+                document.getElementById('cropDetail').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            window.showDiseaseDetail = function(diseaseId) {
+                document.getElementById('cropDetail').classList.add('hidden');
+                document.getElementById('diseaseDetail').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            };
+
+            // Authentication modal functions
+            window.closeAuthModal = function() {
+                document.getElementById('authModal').classList.add('hidden');
+            };
+
+            // Image gallery functions
+            window.changeMainImage = function(src) {
+                document.getElementById('mainDiseaseImage').src = src;
+                // Update active thumbnail
+                document.querySelectorAll('.gallery-scroll img').forEach(img => {
+                    img.classList.remove('border-primary');
+                    img.classList.add('border-border');
+                });
+                event.target.classList.add('border-primary');
+                event.target.classList.remove('border-border');
+            };
+
+            window.openImageModal = function(src) {
+                document.getElementById('modalImage').src = src;
+                document.getElementById('imageModal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            };
+
+            window.closeImageModal = function() {
+                document.getElementById('imageModal').classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            };
+
+            // Event listeners for crop cards
+            document.querySelectorAll('[data-crop]').forEach(card => {
+                card.addEventListener('click', function() {
+                    const cropType = this.getAttribute('data-crop');
+                    showCropDetail(cropType);
+                });
+            });
+
+            // Language toggle functionality
+            document.querySelectorAll('[data-lang]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const lang = this.getAttribute('data-lang');
+                    // Update active state
+                    document.querySelectorAll('[data-lang]').forEach(b => {
+                        b.classList.remove('bg-primary', 'text-primary-foreground');
+                        b.classList.add('text-muted-foreground');
+                    });
+                    this.classList.add('bg-primary', 'text-primary-foreground');
+                    this.classList.remove('text-muted-foreground');
+                    
+                    // TODO: Implement actual language switching with react-i18next
+                    console.log('Language changed to:', lang);
+                });
+            });
+
+            // Tab switching functionality
+            document.querySelectorAll('[data-tab]').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    const parent = this.closest('.bg-card, section');
+                    
+                    // Update active tab
+                    parent.querySelectorAll('[data-tab]').forEach(t => {
+                        t.classList.remove('border-primary', 'text-primary');
+                        t.classList.add('border-transparent', 'text-muted-foreground');
+                    });
+                    this.classList.add('border-primary', 'text-primary');
+                    this.classList.remove('border-transparent', 'text-muted-foreground');
+                    
+                    // Show relevant content (simplified for demo)
+                    console.log('Tab switched to:', tabName);
+                });
+            });
+
+            // Rating functionality for feedback
+            document.querySelectorAll('[data-rating]').forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.getAttribute('data-rating'));
+                    const stars = this.parentElement.querySelectorAll('[data-rating]');
+                    
+                    stars.forEach((s, index) => {
+                        if (index < rating) {
+                            s.classList.add('text-yellow-400');
+                            s.classList.remove('text-muted-foreground');
+                        } else {
+                            s.classList.remove('text-yellow-400');
+                            s.classList.add('text-muted-foreground');
+                        }
+                    });
+                });
+            });
+
+            // Show loading overlay function
+            window.showLoading = function() {
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+            };
+
+            window.hideLoading = function() {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            };
+
+            // PWA service worker registration (placeholder)
+            if ('serviceWorker' in navigator) {
+                // TODO: Register service worker for offline functionality
+                console.log('PWA support available');
+            }
+
+            // Simulated lazy loading for images
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            // TODO: Implement actual lazy loading
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+
+                document.querySelectorAll('img[data-src]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            }
+
+            // Touch gesture support for mobile gallery
+            let startX = 0;
+            let currentX = 0;
+
+            document.querySelectorAll('.gallery-scroll').forEach(gallery => {
+                gallery.addEventListener('touchstart', e => {
+                    startX = e.touches[0].clientX;
+                });
+
+                gallery.addEventListener('touchmove', e => {
+                    e.preventDefault();
+                    currentX = e.touches[0].clientX;
+                });
+
+                gallery.addEventListener('touchend', e => {
+                    const diffX = startX - currentX;
+                    if (Math.abs(diffX) > 50) {
+                        if (diffX > 0) {
+                            gallery.scrollLeft += 100; // Scroll right
+                        } else {
+                            gallery.scrollLeft -= 100; // Scroll left
+                        }
+                    }
+                });
+            });
+
+            console.log('कृषि सहायक app initialized successfully');
+        })();
+    </script>
+</body>
+</html>
